@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Wikibox Generator Pro</title>
+    <!-- BBC Reith Sans Font Import -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reith+Sans:wght@400;500;700&display=swap">
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --panel-bg: #1e1e1e;
+            --border-color: #2d2d2d;
+            --text-light: #e0e0e0;
+            --text-muted: #aaaaaa;
+            --wiki-blue: #0645ad;
+            --up-green: #008000;
+            --down-red: #d33;
+
+            /* Dynamic User Customization Variables */
+            --wikibox-bg: #ffffff;
+            --wikibox-text: #202122;
+            --wikibox-border: #a2a9b1;
+            --wikibox-header-bg: #dedede;
+            --wikibox-header-text: #000000;
+            --wikibox-position-text: #72777d;
+            --wikibox-link: #0645ad;
+            --flag-width: 100px;
+            --card-height: 180px;
+            --card-gap: 6px;
+        }
+
+        /* High Contrast Theme Override */
+        body.high-contrast {
+            --bg-dark: #000000;
+            --panel-bg: #0d0d0d;
+            --border-color: #ffffff;
+            --text-light: #ffffff;
+            --text-muted: #ffff00;
+            --wiki-blue: #00ffff;
+            --up-green: #00ff00;
+            --down-red: #ff3333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Reith Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation Bar */
+        .navbar {
+            height: 56px;
+            background-color: #1a1a1a;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .mode-tabs {
+            display: flex;
+            background-color: #111;
+            padding: 3px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .mode-tab {
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .mode-tab.active {
+            background-color: #3b82f6;
+            color: #ffffff;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background-color: #ffffff;
+            color: #000000;
+            border: 1px solid #ccc;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .nav-btn:hover {
+            background-color: #e6e6e6;
+        }
+
+        .nav-btn.secondary {
+            background-color: #333333;
+            color: #ffffff;
+            border-color: #555555;
+        }
+
+        .nav-btn.secondary:hover {
+            background-color: #444444;
+        }
+
+        /* App Layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 56px);
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 480px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .form-control {
+            width: 100%;
+            background-color: #121212;
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .party-editor-card {
+            background-color: #121212;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .party-editor-card:hover {
+            border-color: #3b82f6;
+        }
+
+        .party-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .btn-small:hover {
+            background-color: #444;
+        }
+
+        .btn-danger {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #b91c1c;
+        }
+
+        .btn-add {
+            background-color: #16a34a;
+            color: white;
+            width: 100%;
+            padding: 10px;
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 6px;
+        }
+
+        .btn-add:hover {
+            background-color: #15803d;
+        }
+
+        .custom-field-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        /* Preview Display Area */
+        .preview-area {
+            flex: 1;
+            background-color: #0b0b0b;
+            padding: 40px;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* Wikibox Frame */
+        .wikibox-container {
+            background-color: var(--wikibox-bg);
+            color: var(--wikibox-text);
+            width: 740px;
+            padding: 14px;
+            border-radius: 2px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            font-family: "Reith Sans", sans-serif;
+            font-size: 13px;
+            line-height: 1.4;
+            border: 1px solid var(--wikibox-border);
+        }
+
+        .wikibox-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: var(--card-gap) 0;
+            table-layout: fixed;
+        }
+
+        .wikibox-table th, 
+        .wikibox-table td {
+            vertical-align: middle;
+            padding: 4px 6px;
+            word-wrap: break-word;
+        }
+
+        .box-title {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            padding-bottom: 8px !important;
+            color: var(--wikibox-text);
+        }
+
+        .box-flag {
+            text-align: center;
+            padding-bottom: 8px !important;
+        }
+
+        .box-flag img {
+            width: var(--flag-width);
+            height: auto;
+            border: 1px solid var(--wikibox-border);
+        }
+
+        .box-header {
+            background-color: var(--wikibox-header-bg);
+            color: var(--wikibox-header-text);
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 6px !important;
+        }
+
+        .box-subtext {
+            text-align: center;
+            padding: 6px 0 !important;
+        }
+
+        .box-nav {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 12px;
+            font-size: 12px;
+        }
+
+        .box-nav-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2px 8px;
+            font-size: 12px;
+        }
+
+        .box-nav a, a.party-name-link {
+            color: var(--wikibox-link);
+            text-decoration: none;
+        }
+
+        .divider-row td {
+            border-top: 1px solid var(--wikibox-border);
+            padding: 0 !important;
+            height: 1px;
+        }
+
+        .portrait-cell {
+            vertical-align: top;
+            padding: 8px 0 !important;
+        }
+
+        .portrait-card {
+            background-color: #eaecf0;
+            width: 100%;
+            height: var(--card-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--wikibox-border);
+            transition: outline 0.2s ease;
+        }
+
+        .party-column-highlight .portrait-card {
+            outline: 3px solid #3b82f6;
+        }
+
+        .portrait-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: relative;
+            z-index: 2;
+        }
+
+        .portrait-pattern-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .party-bar {
+            height: 8px;
+            width: 100%;
+        }
+
+        .candidate-cell {
+            text-align: center;
+            vertical-align: top;
+            padding: 6px 4px !important;
+        }
+
+        .position-title {
+            font-style: italic;
+            font-size: 12px;
+            color: var(--wikibox-position-text);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .candidate-name {
+            font-weight: bold;
+            font-size: 14px;
+            color: var(--wikibox-text);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .party-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .party-logo-small {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+            vertical-align: middle;
+        }
+
+        .label-cell {
+            font-weight: bold;
+            white-space: nowrap;
+            font-size: 13px;
+            padding-right: 8px !important;
+            color: var(--wikibox-text);
+        }
+
+        .data-cell {
+            text-align: center;
+            font-size: 13px;
+            color: var(--wikibox-text);
+        }
+
+        /* Reporting Box styling based on reference image */
+        .reporting-box-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .reporting-bar-outer {
+            width: 170px;
+            height: 22px;
+            background-color: #ffffff;
+            border: 1px solid #797979;
+            position: relative;
+            box-shadow: inset 0 0 1px rgba(0,0,0,0.1);
+        }
+
+        .reporting-bar-inner {
+            height: 100%;
+            background-color: #00c800;
+            transition: width 0.3s ease;
+        }
+
+        .reporting-bar-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: normal;
+            color: #000000;
+        }
+
+        .reporting-subtext {
+            font-size: 11px;
+            color: var(--wikibox-text);
+            margin-top: 3px;
+            text-align: center;
+        }
+
+        .reporting-subtext-link {
+            color: var(--wikibox-link);
+            text-decoration: none;
+        }
+
+        .seat-progress-container {
+            width: 100%;
+            background-color: #2b2b2b;
+            border: 1px solid #555;
+            height: 24px;
+            position: relative;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .seat-progress-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .seat-progress-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: #ffffff;
+            text-shadow: 1px 1px 2px #000000, -1px -1px 2px #000000, 1px -1px 2px #000000, -1px 1px 2px #000000;
+        }
+
+        .swing-up { color: var(--up-green); }
+        .swing-down { color: var(--down-red); }
+
+        /* LIST VIEW WIKIBOX STYLING */
+        .wikibox-list-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--wikibox-border);
+            background-color: var(--wikibox-bg);
+            color: var(--wikibox-text);
+            font-size: 13px;
+        }
+
+        .wikibox-list-table th, 
+        .wikibox-list-table td {
+            border: 1px solid var(--wikibox-border);
+            padding: 6px 8px;
+            vertical-align: middle;
+        }
+
+        .list-header-row th {
+            background-color: #c8e2fb;
+            color: #000000;
+            font-weight: bold;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .list-leader-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .list-portrait-box {
+            width: 60px;
+            height: 75px;
+            border: 2px solid;
+            flex-shrink: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #eee;
+        }
+
+        .list-portrait-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .list-color-bar {
+            width: 6px;
+            min-height: 100%;
+            align-self: stretch;
+            flex-shrink: 0;
+        }
+
+        #import-file {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="brand-group">
+            <div class="brand">Wikibox Generator Pro</div>
+            <div class="mode-tabs">
+                <button class="mode-tab active" id="tab-ge" onclick="switchBoxMode('general')">General Election</button>
+                <button class="mode-tab" id="tab-le" onclick="switchBoxMode('leadership')">Leadership Election</button>
+            </div>
+        </div>
+        <div class="nav-actions">
+            <button class="nav-btn secondary" onclick="toggleHighContrast()">👁️ Contrast</button>
+            <button class="nav-btn secondary" onclick="exportJSON()">💾 Export Config</button>
+            <button class="nav-btn secondary" onclick="document.getElementById('import-file').click()">📂 Import Config</button>
+            <input type="file" id="import-file" accept=".json" onchange="importJSON(event)">
+            <button class="nav-btn" onclick="copyHTML()">📋 Copy HTML</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar Controls -->
+        <aside class="sidebar">
+            <div class="section-title">Layout & Style Option</div>
+            <div class="form-group">
+                <label>Wikibox Layout Style</label>
+                <select id="cfg-layout-style" class="form-control" onchange="render()">
+                    <option value="grid" selected>Grid View (Default - Side-by-Side Columns)</option>
+                    <option value="list">List View (Row-Based Table View)</option>
+                </select>
+            </div>
+
+            <hr style="border:0; border-top:1px solid var(--border-color); margin: 16px 0;">
+
+            <div class="section-title">Dimensions & Grid Sizing</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Box Width (px)</label>
+                    <input type="number" id="cfg-box-width" class="form-control" value="740" oninput="updateStyles()">
+                </div>
+                <div class="form-group">
+                    <label>Flag Width (px)</label>
+                    <input type="number" id="cfg-flag-width" class="form-control" value="100" oninput="updateStyles()">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Card Height (px)</label>
+                    <input type="number" id="cfg-card-height" class="form-control" value="180" oninput="updateStyles()">
+                </div>
+                <div class="form-group">
+                    <label>Card Gap (px)</label>
+                    <input type="number" id="cfg-card-gap" class="form-control" value="6" oninput="updateStyles()">
+                </div>
+            </div>
+
+            <hr style="border:0; border-top:1px solid var(--border-color); margin: 16px 0;">
+
+            <div class="section-title">Color Palette Customization</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Box BG</label>
+                    <input type="color" id="cfg-color-bg" class="form-control" value="#ffffff" style="height:34px; padding:2px;" oninput="updateStyles()">
+                </div>
+                <div class="form-group">
+                    <label>Text Color</label>
+                    <input type="color" id="cfg-color-text" class="form-control" value="#202122" style="height:34px; padding:2px;" oninput="updateStyles()">
+                </div>
+                <div class="form-group">
+                    <label>Borders</label>
+                    <input type="color" id="cfg-color-border" class="form-control" value="#a2a9b1" style="height:34px; padding:2px;" oninput="updateStyles()">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Header BG</label>
+                    <input type="color" id="cfg-color-header-bg" class="form-control" value="#dedede" style="height:34px; padding:2px;" oninput="updateStyles()">
+                </div>
+                <div class="form-group">
+                    <label>Header Text</label>
+                    <input type="color" id="cfg-color-header-text" class="form-control" value="#000000" style="height:34px; padding:2px;" oninput="updateStyles()">
+                </div>
+                <div class="form-group">
+                    <label>Position Text</label>
+                    <input type="color" id="cfg-color-position-text" class="form-control" value="#72777d" style="height:34px; padding:2px;" oninput="updateStyles()">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Link Color</label>
+                    <input type="color" id="cfg-color-link" class="form-control" value="#0645ad" style="height:34px; padding:2px;" oninput="updateStyles()">
+                </div>
+            </div>
+
+            <hr style="border:0; border-top:1px solid var(--border-color); margin: 16px 0;">
+
+            <div class="section-title">General & Design Settings</div>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="cfg-title" class="form-control" value="1983 United Kingdom general election" oninput="render(); recalculateAll();">
+            </div>
+            <div class="form-group">
+                <label>Flag URL</label>
+                <input type="text" id="cfg-flag" class="form-control" value="https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg" oninput="render()">
+            </div>
+            <div class="form-group">
+                <label>Subtitle Header</label>
+                <input type="text" id="cfg-subtitle" class="form-control" value="General election" oninput="render()">
+            </div>
+            <div class="form-group">
+                <label>Seats / Requirement Text</label>
+                <input type="text" id="cfg-seats" class="form-control" value="All 650 seats" oninput="render()">
+            </div>
+            <div class="form-group">
+                <label>Majority Requirement / Threshold Text</label>
+                <input type="text" id="cfg-majority" class="form-control" value="326 seats needed for a majority" oninput="render()">
+            </div>
+            <div class="form-group">
+                <label>Election Date</label>
+                <input type="text" id="cfg-date" class="form-control" value="June 1983" oninput="render()">
+            </div>
+
+            <!-- Custom General Fields Container -->
+            <div id="custom-fields-list"></div>
+            <button class="btn-add" style="background-color:#3b82f6; margin-bottom:12px;" onclick="addCustomField()">+ Add Custom Setting Field</button>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Previous Link 1</label>
+                    <input type="text" id="cfg-prev" class="form-control" value="← 1979 election" oninput="render()">
+                </div>
+                <div class="form-group">
+                    <label>Next Link 1</label>
+                    <input type="text" id="cfg-next" class="form-control" value="1987 election →" oninput="render()">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Previous Link 2 (Secondary)</label>
+                    <input type="text" id="cfg-prev2" class="form-control" value="← outgoing MPs" oninput="render()">
+                </div>
+                <div class="form-group">
+                    <label>Next Link 2 (Secondary)</label>
+                    <input type="text" id="cfg-next2" class="form-control" value="elected MPs →" oninput="render()">
+                </div>
+            </div>
+
+            <!-- Reporting Progress Section Controls -->
+            <div class="section-title" style="margin-top:16px;">Reporting Progress Box</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Reporting Percentage / Value</label>
+                    <input type="text" id="cfg-reporting-pct" class="form-control" value="95%" placeholder="e.g. 95% or TBD" oninput="render()">
+                </div>
+                <div class="form-group">
+                    <label>Timestamp / Subtext</label>
+                    <input type="text" id="cfg-reporting-subtext" class="form-control" value="as of 6:58 p.m., November 12, 2028 EST" placeholder="Timestamp / timezone" oninput="render()">
+                </div>
+            </div>
+
+            <hr style="border:0; border-top:1px solid var(--border-color); margin: 16px 0;">
+
+            <div class="section-title">Votes & Turnout</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Votes / Turnout Label</label>
+                    <input type="text" id="cfg-votes-label" class="form-control" value="Turnout" placeholder="e.g. Turnout or Total votes" oninput="render()">
+                </div>
+                <div class="form-group">
+                    <label>Votes / Turnout Value</label>
+                    <input type="text" id="cfg-votes" class="form-control" value="72.7% (30,670,223)" oninput="recalculateAll(); render();">
+                </div>
+            </div>
+
+            <hr style="border:0; border-top:1px solid var(--border-color); margin: 16px 0;">
+
+            <div class="section-title">List View Extras (Optional)</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Others Row Seats</label>
+                    <input type="text" id="cfg-others-seats" class="form-control" value="33" oninput="render()">
+                </div>
+                <div class="form-group">
+                    <label>Others Row %</label>
+                    <input type="text" id="cfg-others-pct" class="form-control" value="16.5" oninput="render()">
+                </div>
+                <div class="form-group">
+                    <label>Others Popular Vote</label>
+                    <input type="text" id="cfg-others-votes" class="form-control" value="4,361,165" oninput="render()">
+                </div>
+            </div>
+
+            <hr style="border:0; border-top:1px solid var(--border-color); margin: 16px 0;">
+
+            <div class="section-title">Candidates & Parties</div>
+            
+            <div id="parties-list"></div>
+            <button class="btn-add" onclick="addParty()">+ Add Candidate Column</button>
+        </aside>
+
+        <!-- Preview Area -->
+        <main class="preview-area">
+            <div class="wikibox-container" id="wikibox-frame"></div>
+        </main>
+    </div>
+
+    <script>
+        let currentBoxMode = 'general'; // 'general' or 'leadership'
+
+        const ukPartyColors = {
+            "conservative": "#0087dc",
+            "conservative party": "#0087dc",
+            "tories": "#0087dc",
+            "labour": "#e4003b",
+            "labour party": "#e4003b",
+            "liberal party": "#fdbb30",
+            "liberal democrats": "#faa61a",
+            "liberal democratic": "#faa61a",
+            "lib dem": "#faa61a",
+            "liberal / sdp alliance": "#fdbb30",
+            "green party": "#02a95c",
+            "reform uk": "#12b6cf",
+            "snp": "#fdf06e",
+            "scottish national": "#fdf06e"
+        };
+
+        let customFields = [];
+
+        function getPatternCSS(type, color) {
+            switch (type) {
+                case 'stripes':
+                    return `repeating-linear-gradient(45deg, ${color}, ${color} 10px, rgba(255,255,255,0.2) 10px, rgba(255,255,255,0.2) 20px)`;
+                case 'dots':
+                    return `radial-gradient(${color} 20%, transparent 20%) 0 0 / 10px 10px, radial-gradient(${color} 20%, transparent 20%) 5px 5px / 10px 10px`;
+                case 'checkerboard':
+                    return `repeating-conic-gradient(${color} 0% 25%, transparent 0% 50%) 50% / 20px 20px`;
+                case 'grid':
+                    return `linear-gradient(to right, ${color} 1px, transparent 1px), linear-gradient(to bottom, ${color} 1px, transparent 1px)`;
+                case 'diagonal':
+                    return `repeating-linear-gradient(-45deg, ${color}, ${color} 5px, transparent 5px, transparent 15px)`;
+                default:
+                    return 'none';
+            }
+        }
+
+        let partyData = [
+            { 
+                position: "Prime Minister", 
+                candidate: "Margaret Thatcher", 
+                deputy: "William Whitelaw",
+                portrait: "", 
+                symbol: "?", 
+                name: "Conservative Party", 
+                logo: "",
+                color: "#0087dc", 
+                pattern: "none",
+                lastElection: "339 seats, 43.9%", 
+                seatsBefore: "339",
+                seatsWon: "397", 
+                totalSeats: "650", 
+                useGraphic: true,
+                seatChange: "▲ 58", 
+                popularVote: "13012316", 
+                percentage: "42.4%", 
+                swing: "▼ 1.5 pp" 
+            },
+            { 
+                position: "Leader of the Opposition", 
+                candidate: "Michael Foot", 
+                deputy: "Denis Healey",
+                portrait: "", 
+                symbol: "L", 
+                name: "Labour Party", 
+                logo: "",
+                color: "#e4003b", 
+                pattern: "none",
+                lastElection: "269 seats, 36.9%", 
+                seatsBefore: "269",
+                seatsWon: "209", 
+                totalSeats: "650", 
+                useGraphic: true,
+                seatChange: "▼ 60", 
+                popularVote: "8456934", 
+                percentage: "27.6%", 
+                swing: "▼ 9.3 pp" 
+            },
+            { 
+                position: "Alliance Leader", 
+                candidate: "David Steel", 
+                deputy: "Roy Jenkins",
+                portrait: "", 
+                symbol: "?", 
+                name: "Liberal / SDP Alliance", 
+                logo: "",
+                color: "#fdbb30", 
+                pattern: "none",
+                lastElection: "11 seats, 13.8%", 
+                seatsBefore: "11",
+                seatsWon: "23", 
+                totalSeats: "650", 
+                useGraphic: true,
+                seatChange: "▲ 12", 
+                popularVote: "7780949", 
+                percentage: "25.4%", 
+                swing: "▲ 11.6 pp" 
+            }
+        ];
+
+        function switchBoxMode(mode) {
+            currentBoxMode = mode;
+            document.getElementById('tab-ge').classList.toggle('active', mode === 'general');
+            document.getElementById('tab-le').classList.toggle('active', mode === 'leadership');
+
+            if (mode === 'leadership') {
+                document.getElementById('cfg-title').value = "2024 Conservative Party leadership election";
+                document.getElementById('cfg-subtitle').value = "Party Leadership Election";
+                document.getElementById('cfg-seats').value = "Final Ballot";
+                document.getElementById('cfg-majority').value = "50%+1 required to win";
+                document.getElementById('cfg-votes-label').value = "Turnout";
+                document.getElementById('cfg-votes').value = "72.8%";
+                document.getElementById('cfg-reporting-pct').value = "100%";
+                document.getElementById('cfg-reporting-subtext').value = "as of 11:00 a.m., November 2, 2024 GMT";
+            } else {
+                document.getElementById('cfg-title').value = "1983 United Kingdom general election";
+                document.getElementById('cfg-subtitle').value = "General election";
+                document.getElementById('cfg-seats').value = "All 650 seats";
+                document.getElementById('cfg-majority').value = "326 seats needed for a majority";
+                document.getElementById('cfg-votes-label').value = "Turnout";
+                document.getElementById('cfg-votes').value = "72.7% (30,670,223)";
+                document.getElementById('cfg-reporting-pct').value = "95%";
+                document.getElementById('cfg-reporting-subtext').value = "as of 6:58 p.m., November 12, 2028 EST";
+            }
+
+            renderSidebar();
+            recalculateAll();
+            render();
+        }
+
+        function addCustomField() {
+            customFields.push({ label: "Registered Voters", value: "42,192,999" });
+            renderCustomFields();
+            render();
+        }
+
+        function removeCustomField(index) {
+            customFields.splice(index, 1);
+            renderCustomFields();
+            render();
+        }
+
+        function updateCustomField(index, key, value) {
+            customFields[index][key] = value;
+            render();
+        }
+
+        function renderCustomFields() {
+            const container = document.getElementById('custom-fields-list');
+            container.innerHTML = '';
+            customFields.forEach((cf, idx) => {
+                const row = document.createElement('div');
+                row.className = 'custom-field-row';
+                row.innerHTML = `
+                    <input type="text" class="form-control" placeholder="Label" value="${cf.label}" oninput="updateCustomField(${idx}, 'label', this.value)">
+                    <input type="text" class="form-control" placeholder="Value" value="${cf.value}" oninput="updateCustomField(${idx}, 'value', this.value)">
+                    <button class="btn-small btn-danger" onclick="removeCustomField(${idx})">✕</button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function movePartyUp(index) {
+            if (index <= 0) return;
+            const temp = partyData[index];
+            partyData[index] = partyData[index - 1];
+            partyData[index - 1] = temp;
+            renderSidebar();
+            render();
+        }
+
+        function movePartyDown(index) {
+            if (index >= partyData.length - 1) return;
+            const temp = partyData[index];
+            partyData[index] = partyData[index + 1];
+            partyData[index + 1] = temp;
+            renderSidebar();
+            render();
+        }
+
+        function duplicateParty(index) {
+            const clone = JSON.parse(JSON.stringify(partyData[index]));
+            clone.candidate += " (Copy)";
+            partyData.splice(index + 1, 0, clone);
+            renderSidebar();
+            recalculateAll();
+            render();
+        }
+
+        function autoCalculateSeatChange(idx) {
+            const p = partyData[idx];
+            const before = parseInt(p.seatsBefore, 10);
+            const won = parseInt(p.seatsWon, 10);
+
+            if (!isNaN(before) && !isNaN(won)) {
+                const diff = won - before;
+                if (diff > 0) {
+                    p.seatChange = `▲ ${diff}`;
+                } else if (diff < 0) {
+                    p.seatChange = `▼ ${Math.abs(diff)}`;
+                } else {
+                    p.seatChange = "0";
+                }
+                
+                const input = document.getElementById(`party-${idx}-seatChange`);
+                if (input) input.value = p.seatChange;
+            }
+        }
+
+        function autoCalculatePercentageAndSwing(idx) {
+            const p = partyData[idx];
+            const totalVotesRaw = document.getElementById('cfg-votes').value.replace(/,/g, '');
+            const matchVotes = totalVotesRaw.match(/\(([\d]+)\)/) || [null, totalVotesRaw];
+            const totalVotes = parseFloat(matchVotes[1] || totalVotesRaw);
+            const partyVotes = parseFloat(String(p.popularVote).replace(/,/g, ''));
+
+            if (!isNaN(totalVotes) && totalVotes > 0 && !isNaN(partyVotes)) {
+                const pct = (partyVotes / totalVotes) * 100;
+                p.percentage = `${pct.toFixed(1)}%`;
+
+                const pctInput = document.getElementById(`party-${idx}-percentage`);
+                if (pctInput) pctInput.value = p.percentage;
+
+                if (p.lastElection) {
+                    const match = p.lastElection.match(/([\d.]+)\s*%/);
+                    if (match && match[1]) {
+                        const prevPct = parseFloat(match[1]);
+                        const swingDiff = pct - prevPct;
+                        if (swingDiff > 0) {
+                            p.swing = `▲ ${swingDiff.toFixed(1)} pp`;
+                        } else if (swingDiff < 0) {
+                            p.swing = `▼ ${Math.abs(swingDiff).toFixed(1)} pp`;
+                        } else {
+                            p.swing = "0.0 pp";
+                        }
+
+                        const swingInput = document.getElementById(`party-${idx}-swing`);
+                        if (swingInput) swingInput.value = p.swing;
+                    }
+                }
+            }
+        }
+
+        function recalculateAll() {
+            partyData.forEach((_, idx) => {
+                autoCalculateSeatChange(idx);
+                autoCalculatePercentageAndSwing(idx);
+            });
+        }
+
+        function checkPartyColor(idx, partyName) {
+            const normalized = partyName.trim().toLowerCase();
+            if (ukPartyColors[normalized]) {
+                const color = ukPartyColors[normalized];
+                partyData[idx].color = color;
+                const colorInput = document.getElementById(`party-${idx}-color`);
+                if (colorInput) colorInput.value = color;
+            }
+        }
+
+        function highlightColumn(index, active) {
+            const cells = document.querySelectorAll(`.col-party-${index}`);
+            cells.forEach(el => {
+                if (active) {
+                    el.classList.add('party-column-highlight');
+                } else {
+                    el.classList.remove('party-column-highlight');
+                }
+            });
+        }
+
+        function updateStyles() {
+            const root = document.documentElement;
+            const w = document.getElementById('cfg-box-width').value || '740';
+            const flagW = document.getElementById('cfg-flag-width').value || '100';
+            const cardH = document.getElementById('cfg-card-height').value || '180';
+            const cardGap = document.getElementById('cfg-card-gap').value || '6';
+
+            root.style.setProperty('--flag-width', `${flagW}px`);
+            root.style.setProperty('--card-height', `${cardH}px`);
+            root.style.setProperty('--card-gap', `${cardGap}px`);
+
+            root.style.setProperty('--wikibox-bg', document.getElementById('cfg-color-bg').value);
+            root.style.setProperty('--wikibox-text', document.getElementById('cfg-color-text').value);
+            root.style.setProperty('--wikibox-border', document.getElementById('cfg-color-border').value);
+            root.style.setProperty('--wikibox-header-bg', document.getElementById('cfg-color-header-bg').value);
+            root.style.setProperty('--wikibox-header-text', document.getElementById('cfg-color-header-text').value);
+            root.style.setProperty('--wikibox-position-text', document.getElementById('cfg-color-position-text').value);
+            root.style.setProperty('--wikibox-link', document.getElementById('cfg-color-link').value);
+
+            const frame = document.getElementById('wikibox-frame');
+            if (frame) frame.style.width = `${w}px`;
+        }
+
+        function renderSidebar() {
+            const container = document.getElementById('parties-list');
+            container.innerHTML = '';
+
+            partyData.forEach((p, idx) => {
+                const card = document.createElement('div');
+                card.className = 'party-editor-card';
+                card.onmouseenter = () => highlightColumn(idx, true);
+                card.onmouseleave = () => highlightColumn(idx, false);
+
+                card.innerHTML = `
+                    <div class="party-card-header">
+                        <span>Candidate ${idx + 1}: ${p.candidate || p.name}</span>
+                        <div class="card-actions">
+                            <button class="btn-small" onclick="movePartyUp(${idx})" ${idx === 0 ? 'disabled style="opacity:0.4;"' : ''} title="Move Up">▲</button>
+                            <button class="btn-small" onclick="movePartyDown(${idx})" ${idx === partyData.length - 1 ? 'disabled style="opacity:0.4;"' : ''} title="Move Down">▼</button>
+                            <button class="btn-small" onclick="duplicateParty(${idx})" title="Duplicate Column">📋</button>
+                            ${partyData.length > 1 ? `<button class="btn-small btn-danger" onclick="removeParty(${idx})" title="Delete Column">✕</button>` : ''}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>${currentBoxMode === 'leadership' ? 'Sought Position' : 'Position Title'}</label>
+                        <input type="text" class="form-control" value="${p.position || ''}" placeholder="e.g. Party Leader" oninput="updateParty(${idx}, 'position', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Candidate Name</label>
+                        <input type="text" class="form-control" value="${p.candidate || ''}" placeholder="e.g. Margaret Thatcher" oninput="updateParty(${idx}, 'candidate', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>${currentBoxMode === 'leadership' ? 'Running Mate / Supporter' : 'Deputy Leader'}</label>
+                        <input type="text" class="form-control" value="${p.deputy || ''}" placeholder="e.g. William Whitelaw" oninput="updateParty(${idx}, 'deputy', this.value)">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Portrait Image URL</label>
+                            <input type="text" class="form-control" value="${p.portrait || ''}" placeholder="Image URL" oninput="updateParty(${idx}, 'portrait', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Fallback Symbol</label>
+                            <input type="text" class="form-control" value="${p.symbol || '?'}" oninput="updateParty(${idx}, 'symbol', this.value)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Party Name (Auto Color Match)</label>
+                        <input type="text" class="form-control" value="${p.name}" oninput="updateParty(${idx}, 'name', this.value); checkPartyColor(${idx}, this.value);">
+                    </div>
+                    <div class="form-group">
+                        <label>Party Small Logo URL (Optional)</label>
+                        <input type="text" class="form-control" value="${p.logo || ''}" placeholder="e.g. https://.../logo.png" oninput="updateParty(${idx}, 'logo', this.value)">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Bar & Pattern Color</label>
+                            <input type="color" id="party-${idx}-color" class="form-control" value="${p.color}" style="height:34px; padding:2px;" oninput="updateParty(${idx}, 'color', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Box Pattern Style</label>
+                            <select class="form-control" onchange="updateParty(${idx}, 'pattern', this.value)">
+                                <option value="none" ${p.pattern === 'none' ? 'selected' : ''}>None (Solid)</option>
+                                <option value="stripes" ${p.pattern === 'stripes' ? 'selected' : ''}>Stripes</option>
+                                <option value="dots" ${p.pattern === 'dots' ? 'selected' : ''}>Dots</option>
+                                <option value="checkerboard" ${p.pattern === 'checkerboard' ? 'selected' : ''}>Checkerboard</option>
+                                <option value="grid" ${p.pattern === 'grid' ? 'selected' : ''}>Grid</option>
+                                <option value="diagonal" ${p.pattern === 'diagonal' ? 'selected' : ''}>Diagonal Lines</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>${currentBoxMode === 'leadership' ? 'Previous Round / Vote' : 'Last Election Summary'}</label>
+                        <input type="text" class="form-control" value="${p.lastElection}" placeholder="e.g. Round 1: 45 votes" oninput="updateParty(${idx}, 'lastElection', this.value); autoCalculatePercentageAndSwing(${idx});">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>${currentBoxMode === 'leadership' ? 'Nominations' : 'Seats Before'}</label>
+                            <input type="text" class="form-control" value="${p.seatsBefore || ''}" placeholder="Value" oninput="updateParty(${idx}, 'seatsBefore', this.value); autoCalculateSeatChange(${idx});">
+                        </div>
+                        <div class="form-group">
+                            <label>${currentBoxMode === 'leadership' ? 'Votes Won' : 'Seats Won'}</label>
+                            <input type="text" class="form-control" value="${p.seatsWon}" placeholder="Value" oninput="updateParty(${idx}, 'seatsWon', this.value); autoCalculateSeatChange(${idx});">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>${currentBoxMode === 'leadership' ? 'Total Ballots' : 'Total Seats'}</label>
+                            <input type="text" class="form-control" value="${p.totalSeats || '650'}" oninput="updateParty(${idx}, 'totalSeats', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>${currentBoxMode === 'leadership' ? 'Vote Margin' : 'Seat Change (Auto)'}</label>
+                            <input type="text" id="party-${idx}-seatChange" class="form-control" value="${p.seatChange}" oninput="updateParty(${idx}, 'seatChange', this.value)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" ${p.useGraphic ? 'checked' : ''} onchange="updateParty(${idx}, 'useGraphic', this.checked)"> Use Graphical Progress Bar
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>Popular / Member Vote</label>
+                        <input type="text" class="form-control" value="${p.popularVote}" oninput="updateParty(${idx}, 'popularVote', this.value); autoCalculatePercentageAndSwing(${idx});">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Percentage (Auto)</label>
+                            <input type="text" id="party-${idx}-percentage" class="form-control" value="${p.percentage}" oninput="updateParty(${idx}, 'percentage', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Swing / Margin (Auto)</label>
+                            <input type="text" id="party-${idx}-swing" class="form-control" value="${p.swing}" oninput="updateParty(${idx}, 'swing', this.value)">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function updateParty(index, field, val) {
+            partyData[index][field] = val;
+            render();
+        }
+
+        function addParty() {
+            partyData.push({
+                position: currentBoxMode === 'leadership' ? 'Candidate' : 'Candidate',
+                candidate: "Candidate Name",
+                deputy: "Deputy Name",
+                portrait: "",
+                symbol: "?",
+                name: "Labour Party",
+                logo: "",
+                color: "#e4003b",
+                pattern: "none",
+                lastElection: "0 votes",
+                seatsBefore: "0",
+                seatsWon: "100",
+                totalSeats: "650",
+                useGraphic: true,
+                seatChange: "▲ 100",
+                popularVote: "0",
+                percentage: "0.0%",
+                swing: "0.0 pp"
+            });
+            renderSidebar();
+            recalculateAll();
+            render();
+        }
+
+        function removeParty(index) {
+            partyData.splice(index, 1);
+            renderSidebar();
+            render();
+        }
+
+        function formatSwingClass(val) {
+            if (!val) return '';
+            if (val.includes('▲')) return 'swing-up';
+            if (val.includes('▼')) return 'swing-down';
+            return '';
+        }
+
+        function formatNumber(numStr) {
+            const num = parseInt(String(numStr).replace(/,/g, ''), 10);
+            return isNaN(num) ? numStr : num.toLocaleString();
+        }
+
+        function toggleHighContrast() {
+            document.body.classList.toggle('high-contrast');
+        }
+
+        function exportJSON() {
+            const config = {
+                boxMode: currentBoxMode,
+                layoutStyle: document.getElementById('cfg-layout-style').value,
+                title: document.getElementById('cfg-title').value,
+                flag: document.getElementById('cfg-flag').value,
+                subtitle: document.getElementById('cfg-subtitle').value,
+                seats: document.getElementById('cfg-seats').value,
+                majority: document.getElementById('cfg-majority').value,
+                date: document.getElementById('cfg-date').value,
+                prev: document.getElementById('cfg-prev').value,
+                next: document.getElementById('cfg-next').value,
+                prev2: document.getElementById('cfg-prev2').value,
+                next2: document.getElementById('cfg-next2').value,
+                reportingPct: document.getElementById('cfg-reporting-pct').value,
+                reportingSubtext: document.getElementById('cfg-reporting-subtext').value,
+                votesLabel: document.getElementById('cfg-votes-label').value,
+                votes: document.getElementById('cfg-votes').value,
+                othersSeats: document.getElementById('cfg-others-seats').value,
+                othersPct: document.getElementById('cfg-others-pct').value,
+                othersVotes: document.getElementById('cfg-others-votes').value,
+                boxWidth: document.getElementById('cfg-box-width').value,
+                flagWidth: document.getElementById('cfg-flag-width').value,
+                cardHeight: document.getElementById('cfg-card-height').value,
+                cardGap: document.getElementById('cfg-card-gap').value,
+                colorBg: document.getElementById('cfg-color-bg').value,
+                colorText: document.getElementById('cfg-color-text').value,
+                colorBorder: document.getElementById('cfg-color-border').value,
+                colorHeaderBg: document.getElementById('cfg-color-header-bg').value,
+                colorHeaderText: document.getElementById('cfg-color-header-text').value,
+                colorPositionText: document.getElementById('cfg-color-position-text').value,
+                colorLink: document.getElementById('cfg-color-link').value,
+                customFields: customFields,
+                partyData: partyData
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(config, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "wikibox_config.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const config = JSON.parse(e.target.result);
+                    if (config.boxMode) switchBoxMode(config.boxMode);
+                    if (config.layoutStyle) document.getElementById('cfg-layout-style').value = config.layoutStyle;
+                    if (config.title) document.getElementById('cfg-title').value = config.title;
+                    if (config.flag) document.getElementById('cfg-flag').value = config.flag;
+                    if (config.subtitle) document.getElementById('cfg-subtitle').value = config.subtitle;
+                    if (config.seats) document.getElementById('cfg-seats').value = config.seats;
+                    if (config.majority) document.getElementById('cfg-majority').value = config.majority;
+                    if (config.date) document.getElementById('cfg-date').value = config.date;
+                    if (config.prev) document.getElementById('cfg-prev').value = config.prev;
+                    if (config.next) document.getElementById('cfg-next').value = config.next;
+                    if (config.prev2) document.getElementById('cfg-prev2').value = config.prev2;
+                    if (config.next2) document.getElementById('cfg-next2').value = config.next2;
+                    if (config.reportingPct) document.getElementById('cfg-reporting-pct').value = config.reportingPct;
+                    if (config.reportingSubtext) document.getElementById('cfg-reporting-subtext').value = config.reportingSubtext;
+                    if (config.votesLabel) document.getElementById('cfg-votes-label').value = config.votesLabel;
+                    if (config.votes) document.getElementById('cfg-votes').value = config.votes;
+
+                    if (config.othersSeats) document.getElementById('cfg-others-seats').value = config.othersSeats;
+                    if (config.othersPct) document.getElementById('cfg-others-pct').value = config.othersPct;
+                    if (config.othersVotes) document.getElementById('cfg-others-votes').value = config.othersVotes;
+
+                    if (config.boxWidth) document.getElementById('cfg-box-width').value = config.boxWidth;
+                    if (config.flagWidth) document.getElementById('cfg-flag-width').value = config.flagWidth;
+                    if (config.cardHeight) document.getElementById('cfg-card-height').value = config.cardHeight;
+                    if (config.cardGap) document.getElementById('cfg-card-gap').value = config.cardGap;
+
+                    if (config.colorBg) document.getElementById('cfg-color-bg').value = config.colorBg;
+                    if (config.colorText) document.getElementById('cfg-color-text').value = config.colorText;
+                    if (config.colorBorder) document.getElementById('cfg-color-border').value = config.colorBorder;
+                    if (config.colorHeaderBg) document.getElementById('cfg-color-header-bg').value = config.colorHeaderBg;
+                    if (config.colorHeaderText) document.getElementById('cfg-color-header-text').value = config.colorHeaderText;
+                    if (config.colorPositionText) document.getElementById('cfg-color-position-text').value = config.colorPositionText;
+                    if (config.colorLink) document.getElementById('cfg-color-link').value = config.colorLink;
+
+                    if (config.customFields) customFields = config.customFields;
+                    if (config.partyData) partyData = config.partyData;
+
+                    renderCustomFields();
+                    renderSidebar();
+                    updateStyles();
+                    recalculateAll();
+                    render();
+                } catch (err) {
+                    alert('Invalid configuration file.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function parsePercentage(str) {
+            const num = parseFloat(String(str).replace('%', ''));
+            return isNaN(num) ? 0 : Math.min(Math.max(num, 0), 100);
+        }
+
+        function formatSubtextWithTZ(subtext) {
+            if (!subtext) return '';
+            const tzMatch = subtext.match(/^(.*?\s)([A-Z]{2,4})$/);
+            if (tzMatch) {
+                return `${tzMatch[1]}<a href="#" class="reporting-subtext-link">${tzMatch[2]}</a>`;
+            }
+            return subtext;
+        }
+
+        function render() {
+            const layoutStyle = document.getElementById('cfg-layout-style').value;
+            const title = document.getElementById('cfg-title').value;
+            const flag = document.getElementById('cfg-flag').value;
+            const subtitle = document.getElementById('cfg-subtitle').value;
+            const seats = document.getElementById('cfg-seats').value;
+            const majority = document.getElementById('cfg-majority').value;
+            const date = document.getElementById('cfg-date').value;
+            const prev = document.getElementById('cfg-prev').value;
+            const next = document.getElementById('cfg-next').value;
+            const prev2 = document.getElementById('cfg-prev2').value;
+            const next2 = document.getElementById('cfg-next2').value;
+            const reportingPct = document.getElementById('cfg-reporting-pct').value;
+            const reportingSubtext = document.getElementById('cfg-reporting-subtext').value;
+            const votesLabel = document.getElementById('cfg-votes-label').value || 'Turnout';
+            const votes = document.getElementById('cfg-votes').value;
+
+            updateStyles();
+
+            if (layoutStyle === 'list') {
+                renderListView({
+                    title, flag, subtitle, seats, majority, date,
+                    prev, next, prev2, next2, votesLabel, votes
+                });
+            } else {
+                renderGridView({
+                    title, flag, subtitle, seats, majority, date,
+                    prev, next, reportingPct, reportingSubtext, votesLabel, votes
+                });
+            }
+        }
+
+        function renderGridView(opts) {
+            let html = `<table class="wikibox-table">`;
+
+            html += `<colgroup><col style="width: 19%;">`;
+            for (let c = 0; c < 3; c++) {
+                html += `<col style="width: 27%;">`;
+            }
+            html += `</colgroup>`;
+
+            html += `<tr><td colspan="4" class="box-title">${opts.title}</td></tr>`;
+            if (opts.flag) {
+                html += `<tr><td colspan="4" class="box-flag"><img src="${opts.flag}" alt="Flag"></td></tr>`;
+            }
+            html += `<tr><td colspan="4" class="box-header">${opts.subtitle}</td></tr>`;
+            
+            let extraFieldsHTML = customFields.map(cf => `${cf.label ? `<b>${cf.label}:</b> ` : ''}${cf.value}`).join('<br>');
+            if (extraFieldsHTML) extraFieldsHTML = `<br>` + extraFieldsHTML;
+
+            html += `
+                <tr>
+                    <td colspan="4" class="box-subtext">
+                        ${opts.seats}<br>
+                        ${opts.majority}<br>
+                        ${opts.date}${extraFieldsHTML}
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4">
+                        <div class="box-nav">
+                            <a href="#">${opts.prev}</a>
+                            <a href="#">${opts.next}</a>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            // Custom Votes / Turnout Row
+            html += `
+                <tr class="divider-row"><td colspan="4"></td></tr>
+                <tr>
+                    <td class="label-cell" style="padding-top:6px !important; padding-bottom:6px !important;">${opts.votesLabel}</td>
+                    <td colspan="3" style="text-align:center;" class="data-cell">${opts.votes}</td>
+                </tr>
+            `;
+
+            // Reporting Progress Bar Row
+            if (opts.reportingPct || opts.reportingSubtext) {
+                const pctVal = parsePercentage(opts.reportingPct);
+                const subtextFormatted = formatSubtextWithTZ(opts.reportingSubtext);
+
+                html += `
+                    <tr>
+                        <td class="label-cell" style="padding-top:6px !important; padding-bottom:6px !important;">Reporting</td>
+                        <td colspan="3" class="data-cell">
+                            <div class="reporting-box-container">
+                                <div class="reporting-bar-outer">
+                                    <div class="reporting-bar-inner" style="width: ${pctVal}%;"></div>
+                                    <div class="reporting-bar-text">${opts.reportingPct}</div>
+                                </div>
+                                ${subtextFormatted ? `<div class="reporting-subtext">${subtextFormatted}</div>` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            for (let i = 0; i < partyData.length; i += 3) {
+                const group = partyData.slice(i, i + 3);
+
+                html += `<tr class="divider-row"><td colspan="4"></td></tr>`;
+
+                // Portrait Row
+                html += `<tr><td></td>`;
+                for (let j = 0; j < 3; j++) {
+                    const globalIdx = i + j;
+                    if (group[j]) {
+                        const p = group[j];
+                        const patternBackground = getPatternCSS(p.pattern, p.color);
+                        html += `
+                            <td class="portrait-cell col-party-${globalIdx}">
+                                <div class="portrait-card">
+                                    <div class="portrait-pattern-overlay" style="background: ${patternBackground};"></div>
+                                    ${p.portrait ? `<img src="${p.portrait}">` : `<span style="color:${p.color}; position:relative; z-index:2;">${p.symbol || '?'}</span>`}
+                                </div>
+                                <div class="party-bar" style="background-color:${p.color}"></div>
+                            </td>
+                        `;
+                    } else {
+                        html += `<td></td>`;
+                    }
+                }
+                html += `</tr>`;
+
+                // Candidate Info Row
+                html += `<tr><td></td>`;
+                for (let j = 0; j < 3; j++) {
+                    const globalIdx = i + j;
+                    if (group[j]) {
+                        const p = group[j];
+                        html += `
+                            <td class="candidate-cell col-party-${globalIdx}">
+                                ${p.position ? `<span class="position-title">${p.position}</span>` : ''}
+                                ${p.candidate ? `<span class="candidate-name">${p.candidate}</span>` : ''}
+                                <div class="party-wrapper">
+                                    ${p.logo ? `<img src="${p.logo}" class="party-logo-small" alt="logo">` : ''}
+                                    <a href="#" class="party-name-link">${p.name}</a>
+                                </div>
+                            </td>
+                        `;
+                    } else {
+                        html += `<td></td>`;
+                    }
+                }
+                html += `</tr>`;
+
+                // Deputy / Running Mate Row
+                html += `<tr><td class="label-cell">${currentBoxMode === 'leadership' ? 'Running mate' : 'Deputy'}</td>`;
+                for (let j = 0; j < 3; j++) {
+                    const globalIdx = i + j;
+                    if (group[j]) {
+                        html += `<td class="data-cell col-party-${globalIdx}">${group[j].deputy || ''}</td>`;
+                    } else {
+                        html += `<td></td>`;
+                    }
+                }
+                html += `</tr>`;
+
+                // Last Election / Previous Round
+                html += `<tr><td class="label-cell">${currentBoxMode === 'leadership' ? 'Prev. round' : 'Last election'}</td>`;
+                for (let j = 0; j < 3; j++) {
+                    const globalIdx = i + j;
+                    if (group[j]) {
+                        html += `<td class="data-cell col-party-${globalIdx}">${group[j].lastElection || ''}</td>`;
+                    } else {
+                        html += `<td></td>`;
+                    }
+                }
+                html += `</tr>`;
+
+                // Seats Before / Nominations
+                html += `<tr><td class="label-cell">${currentBoxMode === 'leadership' ? 'Nominations' : 'Seats before'}</td>`;
+                for (let j = 0; j < 3; j++) {
+                    const globalIdx = i + j;
+                    if (group[j]) {
+                        html += `<td class="data-cell col-party-${globalIdx}">${group[j].seatsBefore || ''}</td>`;
+                    } else {
+                        html += `<td></td>`;
+                    }
+                }
+                html += `</tr>`;
+
+                // Seats / Votes Won Row
+                html += `<tr><td class="label-cell">${currentBoxMode === 'leadership' ? 'Votes won' : 'Seats won'}</td>`;
+                for (let j = 0; j < 3; j++) {
+                    const globalIdx = i + j;
+                    if (group[j]) {
+                        const p = group[j];
+                        if (p.useGraphic) {
+                            const won = parseFloat(p.seatsWon) || 0;
+                            const total = parseFloat(p.totalSeats) || 1;
+                            const pct = Math.min(Math.max((won / total) * 100, 0), 100);
+                            html += `
+                                <td class="data-cell col-party-${globalIdx}">
+                                    <div class="seat-progress-container">
+                                        <div class="seat-progress-fill" style="width: ${pct}%; background-color: ${p.color};"></div>
+                                        <div class="seat-progress-text">${p.seatsWon} / ${p.totalSeats}</div>
+                                    </div>
+                                </td>
+                            `;
+                        } else {
+                            html += `<td class="data-cell col-party-${globalIdx}"><b>${p.seatsWon}</b></td>`;
+                        }
+                    } else {
+                        html += `<td></td>`;
+                    }
+                }
+                html += `</tr>`;
+
+                // Seat / Vote Change Row
+                html += `<tr><td class="label-cell">${currentBoxMode === 'leadership' ? 'Margin' : 'Seat change'}</td>`;
+                for (let j = 0; j < 3; j++) {
+                    const globalIdx = i + j;
+                    if (group[j]) {
+                        const val = group[j].seatChange || '';
+                        const cls = formatSwingClass(val);
+                        html += `<td class="data-cell ${cls} col-party-${globalIdx}">${val}</td>`;
+                    } else {
+                        html += `<td></td>`;
+                    }
+                }
+                html += `</tr>`;
+
+                // Popular Vote Row
+                html += `<tr><td class="label-cell">${currentBoxMode === 'leadership' ? 'Member vote' : 'Popular vote'}</td>`;
+                for (let j = 0; j < 3; j++) {
+                    const globalIdx = i + j;
+                    if (group[j]) {
+                        html += `<td class="data-cell col-party-${globalIdx}"><b>${formatNumber(group[j].popularVote)}</b></td>`;
+                    } else {
+                        html += `<td></td>`;
+                    }
+                }
+                html += `</tr>`;
+
+                // Percentage Row
+                html += `<tr><td class="label-cell">Percentage</td>`;
+                for (let j = 0; j < 3; j++) {
+                    const globalIdx = i + j;
+                    if (group[j]) {
+                        html += `<td class="data-cell col-party-${globalIdx}">${group[j].percentage || ''}</td>`;
+                    } else {
+                        html += `<td></td>`;
+                    }
+                }
+                html += `</tr>`;
+
+                // Swing Row
+                html += `<tr><td class="label-cell">Swing</td>`;
+                for (let j = 0; j < 3; j++) {
+                    const globalIdx = i + j;
+                    if (group[j]) {
+                        const val = group[j].swing || '';
+                        const cls = formatSwingClass(val);
+                        html += `<td class="data-cell ${cls} col-party-${globalIdx}">${val}</td>`;
+                    } else {
+                        html += `<td></td>`;
+                    }
+                }
+                html += `</tr>`;
+            }
+
+            html += `</table>`;
+
+            document.getElementById('wikibox-frame').innerHTML = html;
+        }
+
+        function renderListView(opts) {
+            const othersSeats = document.getElementById('cfg-others-seats').value || '33';
+            const othersPct = document.getElementById('cfg-others-pct').value || '16.5';
+            const othersVotes = document.getElementById('cfg-others-votes').value || '4,361,165';
+
+            let html = `<table class="wikibox-list-table">`;
+
+            // Title Banner
+            html += `
+                <tr>
+                    <td colspan="5" class="box-title" style="background-color: #c8e2fb; color: #000; font-size: 18px; padding: 10px; border-bottom: 2px solid var(--wikibox-border);">
+                        ${opts.title}
+                    </td>
+                </tr>
+            `;
+
+            // Navigation Links Header Row
+            html += `
+                <tr>
+                    <td colspan="5" style="padding: 6px 10px; background-color: var(--wikibox-bg);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; font-size: 13px;">
+                            <div>
+                                <a href="#" class="reporting-subtext-link">${opts.prev}</a><br>
+                                ${opts.prev2 ? `<a href="#" class="reporting-subtext-link">${opts.prev2}</a>` : ''}
+                            </div>
+                            ${opts.flag ? `<div style="text-align: center;"><img src="${opts.flag}" style="width: 50px; height: auto; border: 1px solid var(--wikibox-border);" alt="Flag"></div>` : ''}
+                            <div style="text-align: right;">
+                                <a href="#" class="reporting-subtext-link">${opts.next}</a><br>
+                                ${opts.next2 ? `<a href="#" class="reporting-subtext-link">${opts.next2}</a>` : ''}
+                            </div>
+                        </div>
+                        <div style="text-align: center; font-weight: bold; margin-top: 4px; font-size: 14px;">
+                            ${opts.date}
+                        </div>
+                        <div style="text-align: center; margin-top: 4px; font-size: 12px;">
+                            ${opts.majority}
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px;">
+                            <span><b>${opts.votesLabel}</b></span>
+                            <span>${opts.votes}</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            // List Header Table Columns
+            html += `
+                <tr class="list-header-row">
+                    <th style="width: 32%;">Leader</th>
+                    <th style="width: 23%;">Party</th>
+                    <th style="width: 15%;">Seats</th>
+                    <th style="width: 10%;">%</th>
+                    <th style="width: 20%;">Popular vote</th>
+                </tr>
+            `;
+
+            // Party List Rows
+            partyData.forEach((p, idx) => {
+                const totalSeats = p.totalSeats || '659';
+                const pctClean = (p.percentage || '0%').replace('%', '');
+                
+                html += `
+                    <tr class="col-party-${idx}">
+                        <td style="padding: 4px;">
+                            <div class="list-leader-cell">
+                                <div class="list-portrait-box" style="border-color: ${p.color};">
+                                    ${p.portrait ? `<img src="${p.portrait}" alt="${p.candidate}">` : `<span style="color:${p.color}; font-size: 20px;">${p.symbol || '?'}</span>`}
+                                </div>
+                                <div>
+                                    ${p.position ? `<span class="position-title" style="font-size:11px; margin-bottom:1px;">${p.position}</span>` : ''}
+                                    <a href="#" class="party-name-link" style="font-weight: bold; font-size: 13px;">${p.candidate}</a>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding: 0; vertical-align: stretch;">
+                            <div style="display: flex; height: 100%; min-height: 75px; align-items: center;">
+                                <div class="list-color-bar" style="background-color: ${p.color};"></div>
+                                <div style="padding: 6px 8px;">
+                                    <a href="#" class="party-name-link" style="font-size: 13px; font-weight: bold;">${p.name}</a>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align: center; line-height: 1.3;">
+                            <span style="font-size: 13px;">${p.seatsWon}</span><br>
+                            <span style="font-size: 11px; color: var(--wikibox-position-text);">of</span><br>
+                            <span style="font-size: 13px;">${totalSeats}</span>
+                        </td>
+                        <td style="text-align: center; font-size: 13px;">
+                            ${pctClean}
+                        </td>
+                        <td style="text-align: center; font-size: 13px;">
+                            ${formatNumber(p.popularVote)}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Optional "Others" Row
+            if (othersSeats || othersPct || othersVotes) {
+                html += `
+                    <tr>
+                        <td colspan="2" style="text-align: center;">
+                            <a href="#" class="party-name-link">Others</a>
+                        </td>
+                        <td style="text-align: center;">${othersSeats}</td>
+                        <td style="text-align: center;">${othersPct}</td>
+                        <td style="text-align: center;">${othersVotes}</td>
+                    </tr>
+                `;
+            }
+
+            html += `</table>`;
+
+            document.getElementById('wikibox-frame').innerHTML = html;
+        }
+
+        function copyHTML() {
+            const wikiboxContent = document.getElementById('wikibox-frame').innerHTML;
+            navigator.clipboard.writeText(wikiboxContent).then(() => {
+                alert('Wikibox HTML copied to clipboard!');
+            });
+        }
+
+        renderCustomFields();
+        renderSidebar();
+        recalculateAll();
+        render();
+    </script>
+</body>
+</html>
